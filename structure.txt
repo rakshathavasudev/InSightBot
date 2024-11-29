@@ -1,0 +1,18 @@
+├── app.py                     # Main Flask application
+│   └── submit_youtube_link()   # Handles the form submission for YouTube links and triggers the transcription process
+│   └── submit_file()          # Handles file uploads and triggers the file transcription process
+├── transcriber/
+│   ├── __init__.py            # Makes this a Python package
+│   ├── youtube_transcriber.py # Handles YouTube video transcription logic
+│   │   └── transcribe_youtube_video()  # Extracts audio from a YouTube video and performs transcription
+│   └── file_transcriber.py    # Handles file-based transcription logic
+│       └── transcribe_audio_file()    # Handles the transcription of uploaded audio files
+├── utils/
+│   ├── __init__.py            # Makes this a Python package
+│   └── file_utils.py          # Utility functions for file handling
+│       └── delete_files_in_directory()  # Deletes all files in a given directory
+│       └── save_transcription_to_file() # Saves the transcription text to a file
+├── requirements.txt           # Lists the dependencies for the project
+├── static/                    # Static files like CSS, JS, Images
+├── templates/                 # HTML templates for rendering UI
+└── transcripts/               # Folder where transcriptions are stored
