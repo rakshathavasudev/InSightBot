@@ -1,110 +1,80 @@
-import os
-import streamlit as st
-from preprocessing.file_processor import process_file
-from embedding.embedding_utils import get_huggingface_embeddings
-from embedding.pinecone_utils import upload_to_pinecone
-from utils.helper_functions import delete_files_in_directory
+from flask import Flask, render_template, request, jsonify
+from .groq_utils import GroqClass
+from .preprocessing import DocumentProcessor
+from .transcriber import YouTubeTranscriber
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
-# Configure Streamlit page
-st.set_page_config(page_title="Embedding Manager", layout="wide")
+app = Flask(__name__)
 
-# Directory paths
-UPLOAD_DIR = "uploaded_files"
-PROCESSED_DIR = "processed_files"
+# Initialize embeddings and shared classes
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+groq_client = GroqClass()  # Initialize GroqClass globally to be reused
+document_processor = DocumentProcessor()  # Initialize DocumentProcessor globally
 
-# Ensure directories exist
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(PROCESSED_DIR, exist_ok=True)
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-# Streamlit App
-def main():
-    st.title("Embedding Manager")
 
-    # Sidebar options
-    with st.sidebar:
-        st.header("Navigation")
-        selected_option = st.radio(
-            "Choose an action:",
-            options=["Upload and Process Files", "View Embeddings", "Manage Files"]
+@app.route('/submit_youtube_link', methods=['POST'])
+def submit_youtube_link():
+    directory_path = "/transcripts"
+    youtube_link = request.form.get('youtube_link')
+
+    if not youtube_link:
+        return jsonify({"error": "No YouTube link provided"}), 400
+
+    # Process documents
+    try:
+        document_processor.delete_files_in_directory(directory_path)
+        transcriber = YouTubeTranscriber(youtube_link)
+        transcriber.transcribe()
+
+        documents = document_processor.process_directory(directory_path)
+        document_data = document_processor.prepare_data(documents)
+        documents_chunks = document_processor.chunk_data(document_data)
+
+        index_name = "insightbot"
+        namespace = "transcripts"
+
+        # Upsert vectorstore to Pinecone
+        vectorstore_from_documents = document_processor.upsert_vectorstore_to_pinecone(
+            documents_chunks, embeddings, index_name, namespace
         )
+        
+        return jsonify({"message": f"Link '{youtube_link}' submitted and processed successfully!"})
 
-    # Option 1: Upload and Process Files
-    if selected_option == "Upload and Process Files":
-        st.header("Upload and Process Files")
+    except Exception as e:
+        return jsonify({"error": f"Error processing YouTube link: {str(e)}"}), 500
 
-        uploaded_files = st.file_uploader(
-            "Upload files (text only):",
-            type=["txt", "csv"],
-            accept_multiple_files=True
-        )
 
-        if uploaded_files:
-            for uploaded_file in uploaded_files:
-                file_path = os.path.join(UPLOAD_DIR, uploaded_file.name)
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.read())
-                st.success(f"Uploaded {uploaded_file.name} successfully!")
+@app.route('/ask_question', methods=['POST'])
+def ask_question():
+    question = request.form.get('question')
 
-            if st.button("Process Uploaded Files"):
-                for filename in os.listdir(UPLOAD_DIR):
-                    file_path = os.path.join(UPLOAD_DIR, filename)
-                    processed_path = os.path.join(PROCESSED_DIR, filename)
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
 
-                    # Process the file
-                    try:
-                        processed_text = process_file(file_path)
-                        with open(processed_path, "w") as f:
-                            f.write(processed_text)
-                        st.success(f"Processed {filename} successfully!")
-                    except Exception as e:
-                        st.error(f"Error processing {filename}: {e}")
+    # Answering question using the initialized GroqClass
+    try:
+        index_name = "insightbot"
+        namespace = "transcripts"
 
-    # Option 2: View Embeddings
-    elif selected_option == "View Embeddings":
-        st.header("Generate and View Embeddings")
+        # Initialize Pinecone and get answer
+        pinecone_index = groq_client.initialize_pinecone(index_name)
+        answer = groq_client.perform_rag(pinecone_index, namespace, question)
 
-        files = os.listdir(PROCESSED_DIR)
-        if files:
-            selected_file = st.selectbox("Select a file to generate embeddings:", files)
+        return jsonify({"question": question, "answer": answer})
 
-            if selected_file:
-                file_path = os.path.join(PROCESSED_DIR, selected_file)
-                with open(file_path, "r") as f:
-                    text = f.read()
+    except Exception as e:
+        return jsonify({"error": f"Error answering the question: {str(e)}"}), 500
 
-                if st.button("Generate Embeddings"):
-                    try:
-                        embeddings = get_huggingface_embeddings(text)
-                        st.success("Embeddings generated successfully!")
-                        st.json(embeddings)
 
-                        if st.button("Upload to Pinecone"):
-                            upload_to_pinecone(embeddings, metadata={"filename": selected_file})
-                            st.success("Uploaded embeddings to Pinecone!")
-                    except Exception as e:
-                        st.error(f"Error generating embeddings: {e}")
-        else:
-            st.warning("No processed files available. Please upload and process files first.")
+# Simulating model response for now
+def get_model_response(question):
+    # Replace with actual logic to handle YouTube video and query
+    return f"Answer to your question '{question}'"
 
-    # Option 3: Manage Files
-    elif selected_option == "Manage Files":
-        st.header("Manage Files")
-
-        st.subheader("Uploaded Files")
-        uploaded_files = os.listdir(UPLOAD_DIR)
-        st.write(uploaded_files)
-
-        if st.button("Clear Uploaded Files"):
-            deleted_count = delete_files_in_directory(UPLOAD_DIR)
-            st.success(f"Deleted {deleted_count} uploaded files.")
-
-        st.subheader("Processed Files")
-        processed_files = os.listdir(PROCESSED_DIR)
-        st.write(processed_files)
-
-        if st.button("Clear Processed Files"):
-            deleted_count = delete_files_in_directory(PROCESSED_DIR)
-            st.success(f"Deleted {deleted_count} processed files.")
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

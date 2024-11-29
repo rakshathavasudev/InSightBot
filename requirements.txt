@@ -11,4 +11,3 @@ flask
 pytube
 youtube_transcript_api
 python-dotenv
-streamlit
