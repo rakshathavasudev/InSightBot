@@ -34,6 +34,7 @@ def chatbot():
 @app.route('/submit_media', methods=['POST'])
 def submit_media():
     try:
+        groq_client.reset_memory()
         document_processor.delete_files_in_directory(transcript_dir_path)
         document_processor.delete_files_in_directory(document_dir_path)
 
@@ -77,8 +78,8 @@ def submit_media():
         documents_chunks = document_processor.chunk_data(document_data)
 
         # Upsert to Pinecone or your vector store
-        index_name = "insight-bot"
-        namespace = "media-data"
+        # index_name = "insightbot"
+        # namespace = "transcripts"
         vectorstore_from_documents = document_processor.upsert_vectorstore_to_pinecone(documents_chunks, embeddings, index_name, namespace)
         print('=== Upsert to Pinecone done ===', vectorstore_from_documents)
 
@@ -89,36 +90,6 @@ def submit_media():
         return jsonify({"error": "Failed to process media", "details": str(e)}), 500
 
 @app.route('/submit_youtube_link', methods=['POST'])
-
-# def submit_youtube_link():
-#     directory_path = "/transcripts"
-#     youtube_link = request.form.get('youtube_link')
-
-#     if not youtube_link:
-#         return jsonify({"error": "No YouTube link provided"}), 400
-
-#     # Process documents
-#     try:
-#         document_processor.delete_files_in_directory(directory_path)
-#         transcriber = YouTubeTranscriber(youtube_link)
-#         transcriber.transcribe()
-
-#         documents = document_processor.process_directory(directory_path)
-#         document_data = document_processor.prepare_data(documents)
-#         documents_chunks = document_processor.chunk_data(document_data)
-
-#         index_name = "insightbot"
-#         namespace = "transcripts"
-
-#         # Upsert vectorstore to Pinecone
-#         vectorstore_from_documents = document_processor.upsert_vectorstore_to_pinecone(
-#             documents_chunks, embeddings, index_name, namespace
-#         )
-        
-#         return jsonify({"message": f"Link '{youtube_link}' submitted and processed successfully!"})
-
-#     except Exception as e:
-#         return jsonify({"error": f"Error processing YouTube link: {str(e)}"}), 500
 
 @app.route('/ask_question', methods=['POST'])
 def ask_question():

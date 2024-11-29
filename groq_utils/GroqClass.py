@@ -31,6 +31,8 @@ class GroqClass:
         # Initialize Pinecone client
         self.pinecone = Pinecone(api_key=self.pinecone_api_key)
 
+        self.conversation_history=[]
+
     def get_huggingface_embeddings(self, text):
         """
         Get the Hugging Face embeddings for a given text.
@@ -69,12 +71,13 @@ class GroqClass:
         # Augment the query with the context information
         augmented_query = "<CONTEXT>\n" + "\n\n-------\n\n".join(contexts[:10]) + "\n-------\n</CONTEXT>\n\n\n\nMY QUESTION:\n" + query
 
+        conversations="\n".join([f"{msg['role'].upper()}:{msg['content']}" for msg in self.conversation_history])
+        augmented_query += f"Conversation History:\n{conversations}\n\nMy Question:\n{query}"
         # Define the system prompt for Groq
         system_prompt = '''
-            You are a skilled expert in analyzing and understanding textual content from various sources, including YouTube video transcripts and document files.
-            Your task is to answer any questions I have based on the provided text.
-            If timestamps are present in seconds, convert them into a minutes:seconds format (e.g., 90 seconds becomes 1:30).
-            Respond clearly and concisely with complete accuracy.
+            You are an expert in reading the transcript of the given youtube video.
+        Answer any question I have based on the transcripts i have provided. Mention the timestamps where the answer is given.
+        Convert all the timestamps into minutes that are currently in seconds.
         '''
 
         # Make the call to Groq's chat completions
@@ -86,4 +89,16 @@ class GroqClass:
             ]
         )
 
-        return res.choices[0].message.content
+        bot_response= res.choices[0].message.content
+
+        #Update conversations
+        self.conversation_history.append({'role':'user','content':query})
+        self.conversation_history.append({'role':'assistant','content':bot_response})
+
+        return bot_response
+    
+    def reset_memory(self):
+        """
+        Clear the conversation history.
+        """
+        self.conversation_history = []
