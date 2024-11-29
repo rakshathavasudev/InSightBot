@@ -11,4 +11,4 @@ flask
 pytube
 youtube_transcript_api
 python-dotenv
-docx
+python-docx

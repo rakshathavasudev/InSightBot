@@ -3,36 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Chatbot</title>
+    <title>Insight Bot Landing Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Insight Bot</h1>
-        
-        <!-- Input section for YouTube Link -->
+        <p>Your one-stop tool to gain insights from videos and documents.</p>
+
+        <!-- Input section for media -->
         <div class="input-section">
             <input type="text" id="youtube-link" placeholder="Enter YouTube Link">
-            <button onclick="submitYoutubeLink()">Submit</button>
+            <button onclick="addYoutubeLink()">Add Link</button>
         </div>
-        <div id="link-status"></div>
-        
-        <!-- Chat section -->
-        <div class="chat-box" id="chat-box">
-            <!-- Chat messages will be dynamically inserted here -->
-        </div>
-        
-        <!-- Input section for question -->
-        <div class="question-section">
-            <input type="text" id="question-input" placeholder="Ask a question" disabled>
-            <button onclick="askQuestion()" id="send-button" disabled>Send</button>
+        <div class="input-section">
+            <input type="file" id="upload-docs" multiple accept=".pdf,.doc,.docx,.txt">
+            <button onclick="addDocuments()">Add Files</button>
         </div>
 
-        <!-- Clear Button -->
+        <!-- Display selected inputs -->
+        <div id="media-list">
+            <p><strong>Selected Media:</strong></p>
+            <ul id="media-items"></ul>
+        </div>
+
+        <!-- Get Insights Button -->
         <div class="clear-section">
-            <button onclick="clearChat()">Clear</button>
+            <button onclick="goToChatbot()">Get Insights</button>
         </div>
-
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

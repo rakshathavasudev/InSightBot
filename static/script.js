@@ -1,27 +1,3 @@
-// Function to handle YouTube link submission
-function submitYoutubeLink() {
-    const youtubeLink = document.getElementById('youtube-link').value;
-    
-    if (!youtubeLink) {
-        alert('Please enter a YouTube link');
-        return;
-    }
-
-    fetch('/submit_youtube_link', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `youtube_link=${youtubeLink}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('link-status').textContent = data.message;
-        document.getElementById('send-button').disabled = false;
-        document.getElementById('question-input').disabled = false;
-    })
-    .catch(error => console.error('Error:', error));
-}
 
 // Function to handle question submission and display chat
 function askQuestion() {
@@ -65,18 +41,96 @@ function askQuestion() {
     .catch(error => console.error('Error:', error));
 }
 
-// Function to clear chat and reset inputs
+// Function to clear chat 
 function clearChat() {
     // Clear chat messages
     document.getElementById('chat-box').innerHTML = '';
-    
-    // Clear the YouTube link input
-    document.getElementById('youtube-link').value = '';
-    
-    // Clear the link status message
-    document.getElementById('link-status').textContent = '';
+}
 
-    // Disable the question input and Send button
-    document.getElementById('question-input').disabled = true;
-    document.getElementById('send-button').disabled = true;
+// Store selected media
+const mediaItems = [];
+
+// Add YouTube Link
+function addYoutubeLink() {
+    const link = document.getElementById('youtube-link').value;
+    if (link) {
+        mediaItems.push({ type: 'YouTube', value: link });
+        updateMediaList();
+        document.getElementById('youtube-link').value = '';
+    } else {
+        alert('Please enter a valid YouTube link.');
+    }
+}
+
+// Add Uploaded Documents
+function addDocuments() {
+    const files = document.getElementById('upload-docs').files;
+    for (let i = 0; i < files.length; i++) {
+        // Push the entire file object, not just the name
+        mediaItems.push({ type: 'Document', value: files[i] });
+    }
+    updateMediaList();
+}
+
+// Update the Media List Display
+function updateMediaList() {
+    const list = document.getElementById('media-items');
+    list.innerHTML = '';
+    mediaItems.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.type}: ${
+            item.type === 'Document' ? item.value.name : item.value
+        }`;
+        list.appendChild(li);
+    });
+}
+
+// Submit and process all media
+function submitMedia() {
+    const formData = new FormData();
+
+    // Add YouTube Links and Documents to FormData
+    mediaItems.forEach(item => {
+        if (item.type === 'YouTube') {
+            formData.append('youtube_links[]', item.value);
+        } else if (item.type === 'Document') {
+            // Use the actual file object
+            formData.append('documents[]', item.value);
+        }
+    });
+
+    // Debug: Log form data entries
+    for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+    }
+
+    // Send FormData to the server
+    return fetch('/submit_media', {
+        method: 'POST',
+        body: formData,
+    });
+}
+
+// Navigate to Chatbot Page
+async function goToChatbot() {
+    if (mediaItems.length > 0) {
+        try {
+            // Call submitMedia and wait for the server response
+            const response = await submitMedia();
+            
+            if (response.ok) {
+                // Redirect to the chatbot page if submission is successful
+                window.location.href = '/chatbot';
+            } else {
+                // Handle errors from the server
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error || 'Failed to submit media.'}`);
+            }
+        } catch (error) {
+            console.error('Error submitting media:', error);
+            alert('An error occurred while submitting media. Please try again.');
+        }
+    } else {
+        alert('Please add at least one media item.');
+    }
 }

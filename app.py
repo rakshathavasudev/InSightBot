@@ -1,16 +1,24 @@
 from flask import Flask, render_template, request, jsonify
-from .groq_utils import GroqClass
-from .preprocessing import DocumentProcessor
-from .transcriber import YouTubeTranscriber
+from groq_utils import GroqClass
+from preprocessing import DocumentProcessor
+from transcriber import YouTubeTranscriber
 from langchain_community.embeddings import HuggingFaceEmbeddings
 import os
-
+from dotenv import load_dotenv
 app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
+
+index_name = "insightbot"
+namespace = "transcripts"
+# Set environment variables from .env
+os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
+os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
 
 # Initialize embeddings and shared classes
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 groq_client = GroqClass()  # Initialize GroqClass globally to be reused
-document_processor = DocumentProcessor()  # Initialize DocumentProcessor globally
+document_processor = DocumentProcessor(index_name=index_name,namespace=namespace)  # Initialize DocumentProcessor globpally
 # GLOBAL
 document_dir_path = "resources/documents"
 transcript_dir_path = "resources/transcripts"
@@ -116,8 +124,6 @@ def submit_media():
 def ask_question():
     question = request.form.get('question')
     # Get the response from the model
-    index_name = "insight-bot"
-    namespace = "media-data"
     pinecone_index = groq_client.initialize_pinecone(index_name)
     answer=groq_client.perform_rag(pinecone_index, namespace, question)
     return jsonify({"question": question, "answer": answer})

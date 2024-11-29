@@ -2,3 +2,6 @@
 .insightbot
 venv
 .env
+resources/documents/**
+resources/transcripts/**
+__pycache__

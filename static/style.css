@@ -95,3 +95,22 @@ input:disabled, button:disabled {
 .clear-section button:hover {
     background-color: #e53935;
 }
+
+/* Media List Styling */
+#media-list {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#media-items {
+    list-style-type: none;
+    padding: 0;
+}
+
+#media-items li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}

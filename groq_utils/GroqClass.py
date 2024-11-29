@@ -6,24 +6,24 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Set environment variables from .env
-os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
-os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
-
 class GroqClass:
-    def __init__(self, pinecone_api_key=None, groq_api_key=None, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         """
         Initialize the class with necessary keys and model for embeddings.
         """
-        self.pinecone_api_key = pinecone_api_key or os.getenv('PINECONE_API_KEY')
-        self.groq_api_key = groq_api_key or os.getenv('GROQ_API_KEY')
+        # Load environment variables from .env file
+        load_dotenv()
+
+        # Set environment variables from .env
+        os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
+        os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
+
+        self.pinecone_api_key = os.environ['PINECONE_API_KEY']
+        self.groq_api_key = os.environ['GROQ_API_KEY']
         self.model_name = model_name
 
         # Initialize the Groq client with the provided API key
-        self.groq_client = Groq(api_key=self.groq_api_key)
+        self.groq_client = Groq(api_key=self.groq_api_key, http_client=None)
 
         # Initialize embeddings
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_name)
