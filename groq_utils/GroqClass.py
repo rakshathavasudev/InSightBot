@@ -68,13 +68,13 @@ class GroqClass:
 
         # Augment the query with the context information
         augmented_query = "<CONTEXT>\n" + "\n\n-------\n\n".join(contexts[:10]) + "\n-------\n</CONTEXT>\n\n\n\nMY QUESTION:\n" + query
-        print('augmented_query', augmented_query)
 
         # Define the system prompt for Groq
         system_prompt = '''
-        You are an expert in reading the transcript of the given youtube video.
-        Answer any question I have based on the transcripts I have provided. Mention the timestamps where the answer is given.
-        Convert all the timestamps into minutes that are currently in seconds.
+            You are a skilled expert in analyzing and understanding textual content from various sources, including YouTube video transcripts and document files.
+            Your task is to answer any questions I have based on the provided text.
+            If timestamps are present in seconds, convert them into a minutes:seconds format (e.g., 90 seconds becomes 1:30).
+            Respond clearly and concisely with complete accuracy.
         '''
 
         # Make the call to Groq's chat completions

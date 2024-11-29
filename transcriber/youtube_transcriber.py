@@ -1,9 +1,9 @@
 import os
 from pytube import Playlist
 from youtube_transcript_api import YouTubeTranscriptApi
-
+import ssl
 class YouTubeTranscriber:
-    def __init__(self, url, transcript_language='en', output_dir='transcripts'):
+    def __init__(self, url, transcript_language='en', output_dir='resources/transcripts'):
         """
         Initializes the YouTubeTranscriber with a URL (playlist or single video), transcript language, and output directory.
 
@@ -18,18 +18,27 @@ class YouTubeTranscriber:
         # Check if the URL is for a playlist or a single video
         if 'playlist?list=' in url:
             self.is_playlist = True
-            self.playlist = Playlist(url)
-            print('self.playlist', self.playlist)
-        elif 'watch?v=' or 'youtu.be/' in url:
+            self.playlist = []
+            # Disable SSL verification
+            ssl._create_default_https_context = ssl._create_unverified_context
+            playlist_urls = Playlist(url)
+            for url in playlist_urls:
+                self.playlist.append(url)
+        elif 'watch?v=' in url or 'youtu.be/' in url:
             self.is_playlist = False
-            self.video_id = url.split('=')[-1]
+            if 'watch?v=' in url:
+                # Extract video ID from "https://www.youtube.com/watch?v="
+                self.video_id = url.split('watch?v=')[1].split('&')[0]
+            elif 'youtu.be/' in url:
+                # Extract video ID from "https://youtu.be/"
+                self.video_id = url.split('youtu.be/')[1].split('?')[0]
         else:
             raise ValueError("Invalid URL. Provide a valid YouTube playlist or video URL.")
 
         # Ensure output directory exists
         os.makedirs(self.output_dir, exist_ok=True)
         if self.is_playlist:
-            print(f"Found {len(self.playlist.video_urls)} videos in the playlist.")
+            print(f"Found {len(self.playlist)} videos in the playlist.")
 
     def fetch_transcript(self, video_id):
         """
@@ -63,9 +72,17 @@ class YouTubeTranscriber:
         """
         Processes each video in the playlist to fetch and save transcripts.
         """
-        for video_url in self.playlist.video_urls:
+        for video_url in self.playlist:
             # Extract video ID from URL
             video_id = video_url.split('=')[-1]
+            if 'watch?v=' in video_url:
+                # Extract video ID from "https://www.youtube.com/watch?v="
+                video_id = video_url.split('watch?v=')[1].split('&')[0]
+            elif 'youtu.be/' in video_url:
+                # Extract video ID from "https://youtu.be/"
+                video_id = video_url.split('youtu.be/')[1].split('?')[0]
+            else:
+                raise ValueError("Invalid URL. Provide a valid YouTube playlist or video URL.")
             # Fetch and save the transcript
             transcript = self.fetch_transcript(video_id)
             if transcript:
