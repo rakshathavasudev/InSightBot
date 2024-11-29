@@ -1,2 +1,4 @@
 /InSightBot_web/.insightbot
 .insightbot
+venv
+.env

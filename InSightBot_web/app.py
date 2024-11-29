@@ -16,102 +16,106 @@ import os
 from groq import Groq
 import pinecone
 import time
+from dotenv import load_dotenv
 
+from transcriber import YouTubeTranscriber
+
+load_dotenv()
 app = Flask(__name__)
-os.environ['PINECONE_API_KEY'] = '53f1d7ac-54ea-48e4-b4d5-44b410c3fd7b'
-os.environ['GROQ_API_KEY'] = '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'
+os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
+os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
 
 pinecone_api_key= '53f1d7ac-54ea-48e4-b4d5-44b410c3fd7b'
 groq_api_key = "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"
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 groq_client = Groq(api_key=os.environ['GROQ_API_KEY'])
 
-class YouTubeTranscriber:
-    def __init__(self, url, transcript_language='en', output_dir='transcripts'):
-        """
-        Initializes the YouTubeTranscriber with a URL (playlist or single video), transcript language, and output directory.
+# class YouTubeTranscriber:
+#     def __init__(self, url, transcript_language='en', output_dir='transcripts'):
+#         """
+#         Initializes the YouTubeTranscriber with a URL (playlist or single video), transcript language, and output directory.
 
-        :param url: URL of the YouTube playlist or single video
-        :param transcript_language: Preferred language for transcripts (default is 'en' for English)
-        :param output_dir: Directory where transcripts will be saved
-        """
-        self.url = url
-        self.transcript_language = transcript_language
-        self.output_dir = output_dir
+#         :param url: URL of the YouTube playlist or single video
+#         :param transcript_language: Preferred language for transcripts (default is 'en' for English)
+#         :param output_dir: Directory where transcripts will be saved
+#         """
+#         self.url = url
+#         self.transcript_language = transcript_language
+#         self.output_dir = output_dir
 
-        # Check if the URL is for a playlist or a single video
-        if 'playlist?list=' in url:
-            self.is_playlist = True
-            self.playlist = Playlist(url)
-            print('self.playlist', self.playlist)
-        elif 'watch?v=' or 'youtu.be/' in url:
-            self.is_playlist = False
-            self.video_id = url.split('=')[-1]
-        else:
-            raise ValueError("Invalid URL. Provide a valid YouTube playlist or video URL.")
+#         # Check if the URL is for a playlist or a single video
+#         if 'playlist?list=' in url:
+#             self.is_playlist = True
+#             self.playlist = Playlist(url)
+#             print('self.playlist', self.playlist)
+#         elif 'watch?v=' or 'youtu.be/' in url:
+#             self.is_playlist = False
+#             self.video_id = url.split('=')[-1]
+#         else:
+#             raise ValueError("Invalid URL. Provide a valid YouTube playlist or video URL.")
 
-        # Ensure output directory exists
-        os.makedirs(self.output_dir, exist_ok=True)
-        if self.is_playlist:
-            print(f"Found {len(self.playlist.video_urls)} videos in the playlist.")
+#         # Ensure output directory exists
+#         os.makedirs(self.output_dir, exist_ok=True)
+#         if self.is_playlist:
+#             print(f"Found {len(self.playlist.video_urls)} videos in the playlist.")
 
-    def fetch_transcript(self, video_id):
-        """
-        Fetches the transcript for a single video in the specified language.
+#     def fetch_transcript(self, video_id):
+#         """
+#         Fetches the transcript for a single video in the specified language.
 
-        :param video_id: YouTube video ID
-        :return: Transcript as a list of dictionaries with 'start' and 'text' keys
-        """
-        try:
-            # Fetch transcript with the specified language
-            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=[self.transcript_language])
-            return transcript
-        except Exception as e:
-            print(f"Could not retrieve transcript for video ID {video_id}: {e}")
-            return None
+#         :param video_id: YouTube video ID
+#         :return: Transcript as a list of dictionaries with 'start' and 'text' keys
+#         """
+#         try:
+#             # Fetch transcript with the specified language
+#             transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=[self.transcript_language])
+#             return transcript
+#         except Exception as e:
+#             print(f"Could not retrieve transcript for video ID {video_id}: {e}")
+#             return None
 
-    def save_transcript_to_file(self, video_id, transcript):
-        """
-        Saves the transcript of a video to a text file.
+#     def save_transcript_to_file(self, video_id, transcript):
+#         """
+#         Saves the transcript of a video to a text file.
 
-        :param video_id: YouTube video ID
-        :param transcript: Transcript data to save
-        """
-        file_path = os.path.join(self.output_dir, f"{video_id}_transcript.txt")
-        with open(file_path, "w", encoding="utf-8") as file:
-            for line in transcript:
-                file.write(f"{line['start']}: {line['text']}\n")
-        print(f"Transcript saved for video ID: {video_id}")
+#         :param video_id: YouTube video ID
+#         :param transcript: Transcript data to save
+#         """
+#         file_path = os.path.join(self.output_dir, f"{video_id}_transcript.txt")
+#         with open(file_path, "w", encoding="utf-8") as file:
+#             for line in transcript:
+#                 file.write(f"{line['start']}: {line['text']}\n")
+#         print(f"Transcript saved for video ID: {video_id}")
 
-    def transcribe_playlist(self):
-        """
-        Processes each video in the playlist to fetch and save transcripts.
-        """
-        for video_url in self.playlist.video_urls:
-            # Extract video ID from URL
-            video_id = video_url.split('=')[-1]
-            # Fetch and save the transcript
-            transcript = self.fetch_transcript(video_id)
-            if transcript:
-                self.save_transcript_to_file(video_id, transcript)
+#     def transcribe_playlist(self):
+#         """
+#         Processes each video in the playlist to fetch and save transcripts.
+#         """
+#         for video_url in self.playlist.video_urls:
+#             # Extract video ID from URL
+#             video_id = video_url.split('=')[-1]
+#             # Fetch and save the transcript
+#             transcript = self.fetch_transcript(video_id)
+#             if transcript:
+#                 self.save_transcript_to_file(video_id, transcript)
 
-    def transcribe_single_video(self):
-        """
-        Fetches and saves the transcript for a single YouTube video.
-        """
-        # Fetch and save the transcript
-        transcript = self.fetch_transcript(self.video_id)
-        if transcript:
-            self.save_transcript_to_file(self.video_id, transcript)
+#     def transcribe_single_video(self):
+#         """
+#         Fetches and saves the transcript for a single YouTube video.
+#         """
+#         # Fetch and save the transcript
+#         transcript = self.fetch_transcript(self.video_id)
+#         if transcript:
+#             self.save_transcript_to_file(self.video_id, transcript)
 
-    def transcribe(self):
-        """
-        Determines if the URL is a playlist or single video and processes accordingly.
-        """
-        if self.is_playlist:
-            self.transcribe_playlist()
-        else:
-            self.transcribe_single_video()
+#     def transcribe(self):
+#         """
+#         Determines if the URL is a playlist or single video and processes accordingly.
+#         """
+#         if self.is_playlist:
+#             self.transcribe_playlist()
+#         else:
+#             self.transcribe_single_video()
 
 #==========================#
 
@@ -190,14 +194,6 @@ def upsert_vectorstore_to_pinecone(document_data, embeddings, index_name, namesp
 
     else:
         print(f"Namespace '{namespace}' does not exist. Proceeding with upsert.")
-
-    # if namespace in namespaces:
-    #     # If namespace exists, delete the current vectors to replace them
-    #     print(f"Namespace '{namespace}' found. Replacing vector data.")
-    #     index.delete(namespace=namespace, delete_all=True)  # Deletes all vectors in the namespace
-    # else:
-    #     # If namespace doesn't exist, we need to create the vector store
-    #     print(f"Namespace '{namespace}' does not exist. Creating new vector store.")
     
     # Create or replace the vector store
     vectorstore_from_documents = PineconeVectorStore.from_documents(

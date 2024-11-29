@@ -1,0 +1,14 @@
+langchain 
+langchain-community 
+groq 
+pinecone-client 
+langchain_pinecone 
+unstructured 
+pillow_heif 
+unstructured_inference 
+sentence-transformers
+flask
+pytube
+youtube_transcript_api
+python-dotenv
+streamlit
