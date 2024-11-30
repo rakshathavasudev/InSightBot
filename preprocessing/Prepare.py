@@ -13,7 +13,7 @@ from langchain.schema import Document as LangchainDocument
 
 # Load environment variables
 load_dotenv()
-os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
+# os.environ['PINECONE_API_KEY'] = os.environ.get('PINECONE_API_KEY')
 
 class DocumentProcessor:
     def __init__(self, index_name: str, namespace: str, chunk_size: int = 1000, chunk_overlap: int = 30):
@@ -124,7 +124,7 @@ class DocumentProcessor:
 
     def upsert_vectorstore_to_pinecone(self, document_data, embeddings, index_name, namespace):
         # # Initialize Pinecone connection with the new API structure
-        pc = pinecone.Pinecone(api_key=os.environ['PINECONE_API_KEY'])
+        pc = pinecone.Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
 
         # Check if the namespace exists in the index
         index = pc.Index(self.index_name)
@@ -167,7 +167,7 @@ class DocumentProcessor:
         Initialize Pinecone with the provided index name.
         """
         # Initialize Pinecone instance
-        pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
+        pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
 
         # Check if the index exists
         if self.index_name not in [index.name for index in pc.list_indexes().indexes]:

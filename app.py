@@ -11,9 +11,6 @@ load_dotenv()
 
 index_name = "insightbot"
 namespace = "transcripts"
-# Set environment variables from .env
-os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
-os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
 
 # Initialize embeddings and shared classes
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")

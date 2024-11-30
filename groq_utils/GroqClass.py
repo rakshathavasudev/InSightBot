@@ -15,11 +15,11 @@ class GroqClass:
         load_dotenv()
 
         # Set environment variables from .env
-        os.environ['PINECONE_API_KEY'] = os.getenv('PINECONE_API_KEY')
-        os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
+        # os.environ['PINECONE_API_KEY'] = os.environ.get('PINECONE_API_KEY')
+        # os.environ['GROQ_API_KEY'] = os.environ.get('GROQ_API_KEY')
 
-        self.pinecone_api_key = os.environ['PINECONE_API_KEY']
-        self.groq_api_key = os.environ['GROQ_API_KEY']
+        self.pinecone_api_key = os.environ.get('PINECONE_API_KEY')
+        self.groq_api_key = os.environ.get('GROQ_API_KEY')
         self.model_name = model_name
 
         # Initialize the Groq client with the provided API key
