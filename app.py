@@ -74,9 +74,6 @@ def submit_media():
         document_data = document_processor.prepare_data(all_documents)
         documents_chunks = document_processor.chunk_data(document_data)
 
-        # Upsert to Pinecone or your vector store
-        # index_name = "insightbot"
-        # namespace = "transcripts"
         vectorstore_from_documents = document_processor.upsert_vectorstore_to_pinecone(documents_chunks, embeddings, index_name, namespace)
         print('=== Upsert to Pinecone done ===', vectorstore_from_documents)
 
