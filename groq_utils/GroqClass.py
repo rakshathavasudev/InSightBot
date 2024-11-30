@@ -22,6 +22,8 @@ class GroqClass:
         self.groq_api_key = os.environ.get('GROQ_API_KEY')
         self.model_name = model_name
 
+        print(f"GROQ_API_KEY: {self.groq_api_key}")
+        print(f"PINECONE_API_KEY: {self.pinecone_api_key}")
         # Initialize the Groq client with the provided API key
         self.groq_client = Groq(api_key=self.groq_api_key, http_client=None)
 
@@ -72,6 +74,7 @@ class GroqClass:
         augmented_query = "<CONTEXT>\n" + "\n\n-------\n\n".join(contexts[:10]) + "\n-------\n</CONTEXT>\n\n\n\nMY QUESTION:\n" + query
 
         conversations="\n".join([f"{msg['role'].upper()}:{msg['content']}" for msg in self.conversation_history])
+
         augmented_query += f"Conversation History:\n{conversations}\n\nMy Question:\n{query}"
         # Define the system prompt for Groq
         system_prompt = '''
