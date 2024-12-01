@@ -23,7 +23,7 @@ class GroqClass:
         # print(f"GROQ_API_KEY: {self.groq_api_key}")
         # print(f"PINECONE_API_KEY: {self.pinecone_api_key}")
         # Initialize the Groq client with the provided API key
-        self.groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'), http_client=None)
+        self.groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 
         # Initialize embeddings
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_name)
