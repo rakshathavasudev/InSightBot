@@ -15,23 +15,21 @@ class GroqClass:
         load_dotenv()
 
         # Set environment variables from .env
-        # os.environ['PINECONE_API_KEY'] = os.environ.get('PINECONE_API_KEY')
-        # os.environ['GROQ_API_KEY'] = os.environ.get('GROQ_API_KEY')
 
-        self.pinecone_api_key = os.environ.get('PINECONE_API_KEY')
-        self.groq_api_key = os.environ.get('GROQ_API_KEY')
+        # self.pinecone_api_key = os.environ.get('PINECONE_API_KEY')
+        # self.groq_api_key = os.environ.get('GROQ_API_KEY')
         self.model_name = model_name
 
-        print(f"GROQ_API_KEY: {self.groq_api_key}")
-        print(f"PINECONE_API_KEY: {self.pinecone_api_key}")
+        # print(f"GROQ_API_KEY: {self.groq_api_key}")
+        # print(f"PINECONE_API_KEY: {self.pinecone_api_key}")
         # Initialize the Groq client with the provided API key
-        self.groq_client = Groq(api_key=self.groq_api_key, http_client=None)
+        self.groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'), http_client=None)
 
         # Initialize embeddings
         self.embeddings = HuggingFaceEmbeddings(model_name=self.model_name)
 
         # Initialize Pinecone client
-        self.pinecone = Pinecone(api_key=self.pinecone_api_key)
+        self.pinecone = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
 
         self.conversation_history=[]
 
