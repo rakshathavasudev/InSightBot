@@ -83,7 +83,7 @@ class GroqClass:
 
         # Make the call to Groq's chat completions
         res = self.groq_client.chat.completions.create(
-            model="llama-3.1-70b-versatile", # Specify the Groq model
+            model="llama3-70b-8192", # Specify the Groq model
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": augmented_query}
