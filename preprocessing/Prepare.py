@@ -10,6 +10,12 @@ from pinecone import Pinecone
 from pypdf import PdfReader
 from docx import Document as DocxDocument
 from langchain.schema import Document as LangchainDocument
+try:
+    from pdf2image import convert_from_path
+    import pytesseract
+    OCR_AVAILABLE = True
+except Exception:
+    OCR_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
@@ -58,7 +64,26 @@ class DocumentProcessor:
                         reader = PdfReader(file_path)
                         file_data = ""
                         for page in reader.pages:
-                            file_data += page.extract_text()
+                            # extract_text() may return None for scanned or empty pages
+                            page_text = page.extract_text() or ""
+                            file_data += page_text
+                        # If no text extracted and OCR is available, try OCR as a fallback
+                        if not file_data.strip() and OCR_AVAILABLE:
+                            try:
+                                print(f"No text found in PDF via PdfReader, attempting OCR for {file_path}")
+                                images = convert_from_path(file_path)
+                                ocr_text = []
+                                for img in images:
+                                    text = pytesseract.image_to_string(img)
+                                    ocr_text.append(text)
+                                ocr_result = "\n".join(ocr_text)
+                                if ocr_result.strip():
+                                    print(f"OCR succeeded for {file_path}")
+                                    file_data = ocr_result
+                                else:
+                                    print(f"OCR returned no text for {file_path}")
+                            except Exception as ocr_e:
+                                print(f"OCR failed for {file_path}: {ocr_e}")
                     
                     # Process .docx files
                     elif file.endswith(".docx"):
@@ -99,8 +124,11 @@ class DocumentProcessor:
             document_source = document['File']
             document_content = document['Data']
 
-            file_name = document_source.split("/")[-1]
-            folder_names = document_source.split("/")[2:-1] if "/" in document_source else []
+            # Normalize path so this works on Windows and Unix
+            norm_source = os.path.normpath(document_source)
+            parts = norm_source.split(os.path.sep)
+            file_name = parts[-1]
+            folder_names = parts[1:-1] if len(parts) > 2 else []
 
             doc = LangchainDocument(
                 page_content=f"<Source>\n{document_source}\n</Source>\n\n<Content>\n{document_content}\n</Content>",

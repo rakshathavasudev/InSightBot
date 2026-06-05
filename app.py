@@ -1,13 +1,14 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, render_template, request, jsonify
 from groq_utils import GroqClass
 from preprocessing import DocumentProcessor
 from transcriber import YouTubeTranscriber
 from langchain_community.embeddings import HuggingFaceEmbeddings
-import os
-from dotenv import load_dotenv
+
 app = Flask(__name__)
-# Load environment variables from .env file
-load_dotenv()
 
 index_name = "insightbot"
 namespace = "transcripts"
@@ -44,16 +45,44 @@ def submit_media():
             return jsonify({"error": "At least one YouTube link or document is required"}), 400
 
         all_documents = []
+        failed_youtube = []
+        failed_uploaded = []
 
         # Process each YouTube link
         if youtube_links:
             print("=== Processing YouTube Links ===")
+            import re
             for youtube_link in youtube_links:
                 if youtube_link:
-                    print(f"Processing YouTube Link: {youtube_link}")
-                    transcriber = YouTubeTranscriber(youtube_link, output_dir = transcript_dir_path)
+                    # Normalize the link: extract the 11-char video id and build a canonical youtu.be URL
+                    vid = None
+                    # common patterns: watch?v=VIDEOID or youtu.be/VIDEOID
+                    m = re.search(r'(?:v=|youtu\.be/)([A-Za-z0-9_-]{11})', youtube_link)
+                    if m:
+                        vid = m.group(1)
+                        clean_link = f'https://youtu.be/{vid}'
+                    else:
+                        # fallback: pass original link but log for debugging
+                        clean_link = youtube_link
+                    print(f"Processing YouTube Link: {clean_link}")
+                    transcriber = YouTubeTranscriber(clean_link, output_dir = transcript_dir_path)
                     transcriber.transcribe()
-                    print(f"Transcription complete for: {youtube_link}")
+                    # After attempting transcription, check whether a transcript file was created (single-video case)
+                    try:
+                        vid = getattr(transcriber, 'video_id', None)
+                        if vid:
+                            expected_path = os.path.join(transcript_dir_path, f"{vid}_transcript.txt")
+                            if not os.path.exists(expected_path):
+                                print(f"No transcript file created for video ID {vid}")
+                                failed_youtube.append(youtube_link)
+                            else:
+                                print(f"Transcription complete for: {youtube_link}")
+                        else:
+                            # Playlist or unknown - we'll rely on directory processing to find any transcripts
+                            print(f"Transcription attempted for (playlist or unknown id): {youtube_link}")
+                    except Exception as _:
+                        # Non-fatal — record as failure to help debugging
+                        failed_youtube.append(youtube_link)
             documents = document_processor.process_directory(transcript_dir_path)
             all_documents.extend(documents)
 
@@ -65,10 +94,23 @@ def submit_media():
                 file.save(file_path)
                 print(f"Saved file: {file_path}")
             uploaded_documents = document_processor.process_directory(document_dir_path)
+            # Record which uploaded files failed to produce content
+            uploaded_filenames = [f.filename for f in files]
+            processed_filenames = [os.path.basename(d['File']) for d in uploaded_documents]
+            for fname in uploaded_filenames:
+                if fname not in processed_filenames:
+                    failed_uploaded.append(fname)
             all_documents.extend(uploaded_documents)
 
         if not all_documents:
-            return jsonify({"error": "No valid documents to process"}), 400
+            # Provide helpful debugging details about failures
+            details = {
+                "error": "No valid documents to process",
+                "failed_youtube_links": failed_youtube,
+                "failed_uploaded_files": failed_uploaded,
+                "note": "YouTube videos may not have transcripts available. PDFs that are scanned images need OCR to extract text."
+            }
+            return jsonify(details), 400
 
         # Prepare and chunk data
         document_data = document_processor.prepare_data(all_documents)

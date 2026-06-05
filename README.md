@@ -23,4 +23,17 @@ Chunking & Embedding: Splits transcripts into chunks, vectorizes them, and store
 
 RAG Process: When a user asks a question, the bot retrieves relevant chunks and generates a response using a language model.
 
+## OCR (scanned PDFs)
+
+This project includes an optional OCR fallback for scanned PDFs using Tesseract. To enable it on Windows:
+
+1. Install Tesseract OCR: download from https://github.com/tesseract-ocr/tesseract and add the installation folder to your PATH.
+2. Install Python packages:
+
+```powershell
+pip install -r requirements.txt
+```
+
+If Tesseract is not installed or the Python packages are missing, the PDF OCR fallback will be skipped and the server will log a warning.
+
 

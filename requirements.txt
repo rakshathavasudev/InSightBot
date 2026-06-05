@@ -9,6 +9,9 @@ unstructured_inference
 sentence-transformers
 flask
 pytube
-youtube_transcript_api
+youtube_transcript_api>=1.2.4
 python-dotenv
 python-docx
+pytesseract
+pdf2image
+Pillow
