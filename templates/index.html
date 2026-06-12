@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Insight Bot Landing Page</title>
+    <title>Insight Bot &middot; Gain insights from videos & documents</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Insight Bot</h1>
-        <p>Your one-stop tool to gain insights from videos and documents.</p>
+        <div class="brand">
+            <span class="logo">🔍</span>
+            <h1>Insight Bot</h1>
+        </div>
+        <p class="tagline">Add YouTube videos and documents, then chat to gain insights.</p>
 
-        <!-- Input section for media -->
+        <!-- YouTube link -->
+        <div class="section-label">Add a YouTube video</div>
         <div class="input-section">
-            <input type="text" id="youtube-link" placeholder="Enter YouTube Link">
+            <input type="text" id="youtube-link" placeholder="Paste a YouTube link…">
             <button onclick="addYoutubeLink()">Add Link</button>
         </div>
+
+        <!-- Documents -->
+        <div class="section-label">Add documents (PDF, DOC, DOCX, TXT)</div>
         <div class="input-section">
             <input type="file" id="upload-docs" multiple accept=".pdf,.doc,.docx,.txt">
             <button onclick="addDocuments()">Add Files</button>
@@ -23,15 +30,28 @@
 
         <!-- Display selected inputs -->
         <div id="media-list">
-            <p><strong>Selected Media:</strong></p>
+            <div class="section-label" style="margin:0;">Selected media</div>
             <ul id="media-items"></ul>
+            <p class="empty-state" id="media-empty">No media added yet.</p>
         </div>
 
         <!-- Get Insights Button -->
         <div class="clear-section">
-            <button onclick="goToChatbot()">Get Insights</button>
+            <button class="btn-block" id="insights-btn" onclick="goToChatbot()" disabled>Get Insights</button>
         </div>
     </div>
+
+    <!-- Processing overlay -->
+    <div class="overlay" id="processing-overlay">
+        <div class="overlay-card">
+            <div class="big-spinner"></div>
+            <h3>Processing your media…</h3>
+            <p>Transcribing videos and indexing documents. This may take a minute.</p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

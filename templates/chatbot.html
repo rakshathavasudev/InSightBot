@@ -3,30 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Chatbot</title>
+    <title>Insight Bot &middot; Chat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Insight Bot</h1>
-        
+        <div class="chat-header">
+            <a href="/" class="back-link">&larr; New session</a>
+            <div class="brand" style="margin:0;">
+                <span class="logo" style="width:32px;height:32px;font-size:18px;">🔍</span>
+                <h1 style="font-size:1.3rem;">Insight Bot</h1>
+            </div>
+            <span style="width:90px;"></span>
+        </div>
+
         <!-- Chat section -->
         <div class="chat-box" id="chat-box">
-            <!-- Chat messages will be dynamically inserted here -->
+            <p class="chat-empty">Ask a question about your media to get started.</p>
         </div>
-        
+
         <!-- Input section for question -->
         <div class="question-section">
-            <input type="text" id="question-input" placeholder="Ask a question" >
-            <button onclick="askQuestion()" id="send-button" >Send</button>
+            <input type="text" id="question-input" placeholder="Ask a question…">
+            <button onclick="askQuestion()" id="send-button">Send</button>
         </div>
 
         <!-- Clear Chat Button -->
         <div class="clear-section">
-            <button onclick="clearChat()">Clear Chat</button>
+            <button class="btn-danger" onclick="clearChat()">Clear Chat</button>
         </div>
-
     </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

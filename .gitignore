@@ -1,4 +1,39 @@
-venv
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables / secrets
 .env
-__pycache__
+*.env
 youtube_cookies.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Generated / user-provided media (runtime data, not source)
+resources/documents/*
+resources/transcripts/*
+!resources/documents/.gitkeep
+!resources/transcripts/.gitkeep
+*.docx
+*.pdf
+*.doc
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
